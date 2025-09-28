@@ -2,6 +2,22 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 
+// Добавляем интерфейсы для типизации
+interface GroupRow {
+  id: number;
+  vk_name: string;
+  last_post_id: number;
+  created_at: string;
+}
+
+interface ProcessedPostRow {
+  id: number;
+  group_id: number;
+  post_id: number;
+  status: string;
+  processed_at: string;
+}
+
 export class BotDatabase {
   private db: Database.Database;
 
@@ -46,7 +62,7 @@ export class BotDatabase {
   }
 
   // Получаем или создаем группу
-  getOrCreateGroup(vkName: string) {
+  getOrCreateGroup(vkName: string): GroupRow {
     const stmt = this.db.prepare(`
       INSERT OR IGNORE INTO groups (vk_name) VALUES (?)
     `);
@@ -54,7 +70,7 @@ export class BotDatabase {
 
     const group = this.db.prepare(`
       SELECT * FROM groups WHERE vk_name = ?
-    `).get(vkName);
+    `).get(vkName) as GroupRow;
 
     return group;
   }
@@ -63,7 +79,7 @@ export class BotDatabase {
   getLastPostId(vkName: string): number {
     const group = this.db.prepare(`
       SELECT last_post_id FROM groups WHERE vk_name = ?
-    `).get(vkName);
+    `).get(vkName) as GroupRow | undefined;
 
     return group ? group.last_post_id : 0;
   }
@@ -84,7 +100,7 @@ export class BotDatabase {
       AND post_id = ?
     `);
     
-    const result = stmt.get(vkName, postId);
+    const result = stmt.get(vkName, postId) as ProcessedPostRow | undefined;
     return !!result;
   }
 
