@@ -53,10 +53,24 @@ export function extractPhotoUrls(post: VkPost, max: number = 4): string[] {
   const urls: string[] = [];
   for (const att of post.attachments || []) {
     if (att.type === 'photo' && att.photo?.sizes?.length) {
-      // choose the largest size
-      const best = att.photo.sizes.reduce((a,b) => (a.width*a.height >= b.width*b.height ? a : b));
-      urls.push(best.url);
-      if (urls.length >= max) break;
+      try {
+        // Ищем оптимальный размер (не самый большой)
+        // Сортируем по размеру и берем средний
+        const sortedSizes = [...att.photo.sizes].sort((a, b) => 
+          (a.width * a.height) - (b.width * b.height)
+        );
+        
+        // Берем размер из середины (не самый маленький и не самый большой)
+        const optimalSize = sortedSizes[Math.floor(sortedSizes.length / 2)] || 
+                           sortedSizes[sortedSizes.length - 1];
+        
+        if (optimalSize?.url && optimalSize.url.startsWith('http')) {
+          urls.push(optimalSize.url);
+          if (urls.length >= max) break;
+        }
+      } catch (e) {
+        console.log('Skipping problematic photo attachment');
+      }
     }
   }
   return urls;

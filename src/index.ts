@@ -1,3 +1,4 @@
+// index.ts
 import 'dotenv/config';
 import { Bot } from 'grammy';
 import cron from 'node-cron';
@@ -68,26 +69,22 @@ function buildMessage(groupName: string, ownerId: number, postId: number, text: 
 }
 
 // Проверяем, первый ли это запуск (база пустая)
-function isFirstRun(): boolean {
-  for (const group of groupsInput) {
-    const lastPostId = botDatabase.getLastPostId(group);
-    if (lastPostId > 0) {
-      return false;
-    }
-  }
-  return true;
+function isFirstRunForGroup(group: string): boolean {
+  const lastPostId = botDatabase.getLastPostId(group);
+  return lastPostId === 0;
 }
 
 // Основная логика
 async function pollAndPost() {
-  const firstRun = isFirstRun();
-  
-  if (firstRun) {
-    console.log('=== FIRST RUN DETECTED - LIMITING TO 5 POSTS PER GROUP ===');
-  }
-
   for (const group of groupsInput) {
     try {
+      // ПРОВЕРКА ПЕРВОГО ЗАПУСКА ДЛЯ КАЖДОЙ ГРУППЫ
+      const firstRun = isFirstRunForGroup(group);
+      
+      if (firstRun) {
+        console.log(`=== FIRST RUN FOR GROUP ${group} - LIMITING TO 5 POSTS ===`);
+      }
+
       const ownerId = await resolveGroupId(group, env.VK_ACCESS_TOKEN, env.VK_API_VERSION);
       
       // Получаем последний ID из БД
@@ -96,7 +93,7 @@ async function pollAndPost() {
       // Определяем сколько постов загружать
       let postsToLoad = fetchCount + SAFETY_MARGIN;
       if (firstRun) {
-        postsToLoad = FIRST_RUN_POSTS_LIMIT + 2; // Небольшой запас для фильтрации
+        postsToLoad = FIRST_RUN_POSTS_LIMIT + 2;
         console.log(`[${group}] First run - loading ${postsToLoad} posts`);
       }
       

@@ -79,7 +79,14 @@ export class Poster {
       if (photos.length === 1) {
         const caption = text.slice(0, CAPTION_LIMIT);
         const remaining = text.slice(caption.length).trim();
-        await this.raw.api.sendPhoto(channelId, photos[0], { caption });
+        
+        try {
+          await this.raw.api.sendPhoto(channelId, photos[0], { caption });
+        } catch (err: any) {
+          console.error('Error sending photo, sending as text:', err.message);
+          await this.raw.api.sendMessage(channelId, text);
+        }
+        
         if (remaining) {
           const more = this.splitText(remaining, MESSAGE_LIMIT);
           for (const chunk of more) await this.raw.api.sendMessage(channelId, chunk);
@@ -87,7 +94,7 @@ export class Poster {
         return;
       }
 
-      // 3) МНОГО ФОТО
+      // 3) МНОГО ФОТО - ДОБАВЛЕНА ОБРАБОТКА ОШИБОК
       const caption = text.slice(0, CAPTION_LIMIT);
       const remaining = text.slice(caption.length).trim();
 
@@ -97,7 +104,15 @@ export class Poster {
         caption: idx === 0 ? caption : undefined,
       }));
 
-      await this.raw.api.sendMediaGroup(channelId, media);
+      // ⭐ ДОБАВЛЕН TRY-CATCH ДЛЯ sendMediaGroup
+      try {
+        await this.raw.api.sendMediaGroup(channelId, media);
+      } catch (err: any) {
+        console.error('Error sending media group, sending as text:', err.message);
+        // Fallback: отправить как текст
+        await this.raw.api.sendMessage(channelId, text);
+        return; // выходим, так как уже отправили текст
+      }
 
       if (remaining) {
         const more = this.splitText(remaining, MESSAGE_LIMIT);
