@@ -60,6 +60,20 @@ bot.command('force', async ctx => {
   await pollAndPost();
   await ctx.reply('Done.');
 });
+bot.command('help', async ctx => {
+  const helpMessage = `
+    /start - Проверить работу бота
+    /status - Показать статус по группам
+    /force - Принудительно запустить парсинг
+    /help - Показать это сообщение
+
+    *Как работает бот:*
+    - Автоматически проверяет VK группы каждые 2 минуты
+    - Фильтрует посты по ключевым словам
+    - Публикует подходящие посты в канал @automagik
+  `;
+  await ctx.reply(helpMessage, { parse_mode: 'Markdown' });
+})
 
 // Формируем текст
 function buildMessage(groupName: string, ownerId: number, postId: number, text: string) {
