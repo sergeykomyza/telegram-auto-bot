@@ -16,7 +16,7 @@ export class Poster {
   raw: Bot;
   private queue: Array<() => Promise<void>> = [];
   private working = false;
-  private delayMs = 4000; // пауза между постами
+  private delayMs = 30000; // пауза между постами
 
   constructor(token: string) {
     this.raw = new Bot(token);
