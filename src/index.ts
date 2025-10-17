@@ -1,4 +1,10 @@
 // index.ts
+
+// DNS FIX для обхода блокировок VK
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first');
+dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+
 import 'dotenv/config';
 import { Bot } from 'grammy';
 import cron from 'node-cron';
